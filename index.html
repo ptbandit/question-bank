@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>문제은행</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", sans-serif;
+      color: #1a1a1a;
+      background: #f7f9fa;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px 16px 64px;
+    }
+    .container {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      padding: 28px 24px;
+    }
+    [hidden] { display: none !important; }
+
+    /* ---------- 공통 버튼/입력 ---------- */
+    button, select, input { font-family: inherit; }
+    .btn {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e0;
+      background: #fff;
+      color: #2d3748;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .btn:hover { background: #edf2f7; border-color: #a0aec0; }
+    .btn-primary { background: #2d3748; border-color: #2d3748; color: #fff; }
+    .btn-primary:hover { background: #1a202c; border-color: #1a202c; }
+    .btn:disabled { opacity: .5; cursor: default; }
+
+    /* ---------- 로그인 ---------- */
+    #login-view { text-align: center; padding: 24px 0 8px; }
+    #login-view h1 { font-size: 20px; margin-bottom: 6px; }
+    #login-view p { font-size: 13px; color: #718096; margin-bottom: 18px; }
+    .login-row { display: flex; gap: 8px; justify-content: center; }
+    .login-row input {
+      width: 220px; max-width: 60%;
+      font-size: 15px; padding: 8px 10px;
+      border: 1px solid #cbd5e0; border-radius: 4px;
+    }
+    .login-row input:focus { outline: 2px solid #90cdf4; border-color: #90cdf4; }
+    .login-row .btn { font-size: 15px; padding: 8px 16px; }
+    #login-error { color: #c53030; font-size: 13px; margin-top: 12px; min-height: 20px; }
+
+    /* ---------- 앱 헤더 ---------- */
+    .app-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 2px solid #2d3748;
+      padding-bottom: 12px; margin-bottom: 16px;
+    }
+    .app-title { font-size: 18px; font-weight: 700; }
+    .user-box { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #4a5568; }
+    .user-code { background: #edf2f7; padding: 2px 8px; border-radius: 10px; }
+
+    /* ---------- 필터 ---------- */
+    .filter-panel {
+      background: #f8fafc; border: 1px solid #edf2f7; border-radius: 6px;
+      padding: 12px 14px; margin-bottom: 14px;
+    }
+    .filter-block { margin-bottom: 10px; }
+    .filter-label { font-size: 12px; font-weight: 700; color: #4a5568; margin-bottom: 4px; }
+    .set-list { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+    .set-list label { font-size: 13px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+    .set-tools { margin-left: auto; display: flex; gap: 6px; }
+    .set-tools .btn { font-size: 11px; padding: 2px 8px; }
+    .select-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .select-row label { font-size: 12px; font-weight: 700; color: #4a5568; display: block; margin-bottom: 4px; }
+    .select-row select {
+      width: 100%; font-size: 13px; padding: 6px 6px;
+      border: 1px solid #cbd5e0; border-radius: 4px; background: #fff;
+    }
+    .filter-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+    #match-count { font-size: 13px; color: #4a5568; }
+
+    /* ---------- 툴바 ---------- */
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      margin-bottom: 18px; font-size: 12px; color: #4a5568;
+    }
+    .toolbar .spacer { flex: 1; }
+    #save-status { padding: 2px 8px; border-radius: 10px; background: #e2e8f0; }
+    #save-status.saving { background: #fefcbf; }
+    #save-status.saved { background: #c6f6d5; }
+    #save-status.error { background: #fed7d7; cursor: pointer; }
+
+    /* ---------- 문항 ---------- */
+    .empty { text-align: center; padding: 40px 0; color: #a0aec0; font-size: 14px; }
+    .question-list { display: flex; flex-direction: column; gap: 32px; }
+    .question-card { padding-bottom: 24px; border-bottom: 1px solid #edf2f7; }
+    .question-card:last-child { border-bottom: none; padding-bottom: 0; }
+    .q-meta { font-size: 11.5px; color: #a0aec0; margin-bottom: 6px; word-break: keep-all; }
+    .question-header {
+      font-size: 15.5px; color: #1a202c; margin-bottom: 10px;
+      word-break: keep-all; overflow-wrap: break-word; line-height: 1.65;
+      white-space: pre-line;
+    }
+    .question-num { font-weight: 700; margin-right: 4px; }
+    .sub-passage {
+      background: #fafbfc; border: 1px solid #e2e8f0; border-radius: 4px;
+      padding: 10px 14px; margin: 10px 0 14px; font-size: 14.5px; color: #2d3748;
+      line-height: 1.6; white-space: pre-line; word-break: keep-all;
+    }
+    .choices-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .choice-item {
+      display: flex; align-items: baseline; font-size: 15px; color: #2d3748;
+      line-height: 1.55; word-break: keep-all; overflow-wrap: break-word;
+    }
+    .choice-num { flex-shrink: 0; width: 22px; font-weight: 500; user-select: none; }
+    .choice-text { flex: 1; }
+
+    .answer-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .btn-answer {
+      background: #000; color: #fff; border: none; padding: 2px 7px;
+      font-size: 13px; font-weight: 700; cursor: pointer; border-radius: 2px;
+      letter-spacing: .5px; line-height: 1.4; user-select: none;
+      transition: opacity .15s, transform .05s;
+    }
+    .btn-answer:hover { opacity: .85; }
+    .btn-answer:active { transform: scale(.97); }
+
+    .hl-keyword {
+      background-color: transparent; color: inherit; border-radius: 2px;
+      padding: 0 1px; transition: background-color .18s ease-in-out;
+    }
+    .question-card.show-highlight .hl-keyword {
+      background-color: var(--hl-color, #FFFF00);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .05);
+    }
+
+    .explain {
+      display: none; margin-top: 12px; padding: 10px 14px;
+      background: #f7fafc; border-left: 3px solid #a0aec0; border-radius: 2px;
+      font-size: 14px; color: #2d3748; white-space: pre-line; word-break: keep-all;
+    }
+    .question-card.show-highlight .explain { display: block; }
+
+    .more-wrap { text-align: center; margin-top: 28px; }
+
+    @media (max-width: 560px) {
+      .container { padding: 20px 16px; }
+      .select-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ===== 로그인 화면 ===== -->
+    <section id="login-view">
+      <h1>문제은행</h1>
+      <p>발급받은 허용코드를 입력하세요.</p>
+      <div class="login-row">
+        <input id="code-input" type="text" placeholder="허용코드" autocomplete="off"
+               autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button id="login-btn" class="btn btn-primary" type="button">입장</button>
+      </div>
+      <div id="login-error"></div>
+    </section>
+
+    <!-- ===== 메인 화면 ===== -->
+    <section id="app-view" hidden>
+      <div class="app-header">
+        <div class="app-title">문제은행</div>
+        <div class="user-box">
+          <span class="user-code" id="user-code"></span>
+          <button id="logout-btn" class="btn" type="button" style="font-size:12px;padding:3px 10px;">나가기</button>
+        </div>
+      </div>
+
+      <div class="filter-panel">
+        <div class="filter-block">
+          <div style="display:flex;align-items:center;">
+            <div class="filter-label">회차</div>
+            <div class="set-tools">
+              <button id="sets-all" class="btn" type="button">전체 선택</button>
+              <button id="sets-none" class="btn" type="button">전체 해제</button>
+            </div>
+          </div>
+          <div id="set-list" class="set-list"></div>
+        </div>
+
+        <div class="select-row">
+          <div>
+            <label for="sel-subject">시험과목</label>
+            <select id="sel-subject"></select>
+          </div>
+          <div>
+            <label for="sel-field">분야</label>
+            <select id="sel-field"></select>
+          </div>
+          <div>
+            <label for="sel-area">영역</label>
+            <select id="sel-area"></select>
+          </div>
+        </div>
+
+        <div class="filter-foot">
+          <div id="match-count"></div>
+          <button id="load-btn" class="btn btn-primary" type="button">문제 보기</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <span id="progress"></span>
+        <span class="spacer"></span>
+        <button id="toggle-all" class="btn" type="button" hidden>전체 정답 토글</button>
+        <span id="save-status" hidden></span>
+      </div>
+
+      <main id="question-container" class="question-list"></main>
+      <div class="more-wrap"><button id="more-btn" class="btn" type="button" hidden></button></div>
+    </section>
+
+  </div>
+
+<script>
+// =====================================================================
+// 설정
+// =====================================================================
+const SUPABASE_URL = "https://jqycexlruwaosumitoyz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_nmdXzyt-7nGIKsCPPkjDYQ_AsMsn-M4";
+const CODE_STORAGE_KEY = "qb_code";
+const PAGE_SIZE = 30;
+
+// <pure>
+const CIRCLED = ["①", "②", "③", "④", "⑤"];
+
+// 하이라이트 JSON의 필드명 → DB 컬럼명
+const FIELD_MAP = {
+  "본문지문": "main_text",
+  "보조지문": "sub_text",
+  "보기_1": "choice_1", "보기_2": "choice_2", "보기_3": "choice_3",
+  "보기_4": "choice_4", "보기_5": "choice_5"
+};
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+// 왼쪽부터 n번째 등장 위치 (n은 1부터)
+function findNthIndex(haystack, needle, n) {
+  if (!haystack || !needle || !(n > 0)) return -1;
+  let pos = -1;
+  for (let i = 0; i < n; i++) {
+    pos = haystack.indexOf(needle, pos + 1);
+    if (pos === -1) return -1;
+  }
+  return pos;
+}
+
+// text 안에서 items(강조목록) 중 fieldKR 필드에 해당하는 구절을 <mark>로 감싼 HTML 반환
+function highlightHtml(text, fieldKR, items, defaultColor) {
+  if (!text) return "";
+  const list = Array.isArray(items) ? items.filter(it => it && it["필드"] === fieldKR && it["구절"]) : [];
+  if (!list.length) return escapeHtml(text);
+
+  const ranges = [];
+  list.forEach(it => {
+    const start = findNthIndex(text, it["구절"], it["등장순서"] || 1);
+    if (start !== -1) {
+      ranges.push({ start, end: start + it["구절"].length, color: it["배경색"] || defaultColor || "#FFFF00" });
+    }
+  });
+  ranges.sort((a, b) => a.start - b.start);
+
+  const merged = [];
+  let lastEnd = -1;
+  ranges.forEach(r => { if (r.start >= lastEnd) { merged.push(r); lastEnd = r.end; } });
+
+  let html = "", cur = 0;
+  merged.forEach(r => {
+    html += escapeHtml(text.substring(cur, r.start));
+    html += `<mark class="hl-keyword" style="--hl-color:${escapeHtml(r.color)};">` +
+            escapeHtml(text.substring(r.start, r.end)) + `</mark>`;
+    cur = r.end;
+  });
+  html += escapeHtml(text.substring(cur));
+  return html;
+}
+
+// 카탈로그 행 배열에서 key 값별 문항 수 집계 → [[값, 개수], ...] (가나다순)
+function countBy(rows, key) {
+  const m = new Map();
+  rows.forEach(r => { if (r[key] !== null && r[key] !== undefined) m.set(r[key], (m.get(r[key]) || 0) + r.n); });
+  return [...m.entries()].sort((a, b) => String(a[0]).localeCompare(String(b[0]), "ko"));
+}
+// </pure>
+
+// =====================================================================
+// 상태
+// =====================================================================
+const S = {
+  code: null,
+  catalog: [],            // [{exam_set, subject, field, area, n}]
+  selSets: new Set(),     // 선택된 회차
+  subject: "", field: "", area: "",
+  questions: [],          // 현재 불러온 문항
+  shown: new Set(),       // 정답(하이라이트)을 확인한 문항코드 (전체 회차 기준)
+  rendered: 0,
+  reqId: 0
+};
+
+const $ = id => document.getElementById(id);
+
+// =====================================================================
+// Supabase RPC
+// =====================================================================
+async function rpc(name, args, opts) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
+    method: "POST",
+    headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(args || {}),
+    keepalive: !!(opts && opts.keepalive)
+  });
+  if (!res.ok) {
+    let msg = "";
+    try { const j = await res.json(); msg = j.message || ""; } catch (e) {}
+    const err = new Error(msg || ("HTTP " + res.status));
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+// =====================================================================
+// 로그인 / 로그아웃
+// =====================================================================
+function storeGet() { try { return localStorage.getItem(CODE_STORAGE_KEY); } catch (e) { return null; } }
+function storeSet(v) { try { localStorage.setItem(CODE_STORAGE_KEY, v); } catch (e) {} }
+function storeDel() { try { localStorage.removeItem(CODE_STORAGE_KEY); } catch (e) {} }
+
+async function login(code, silent) {
+  code = (code || "").trim();
+  if (!code) { $("login-error").textContent = "코드를 입력하세요."; return; }
+  $("login-btn").disabled = true;
+  $("login-error").textContent = silent ? "" : "확인 중...";
+  try {
+    const ok = await rpc("verify_code", { p_code: code });
+    if (ok !== true) {
+      storeDel();
+      $("login-error").textContent = silent ? "" : "허용되지 않은 코드입니다.";
+      return;
+    }
+    const [catalog, my] = await Promise.all([
+      rpc("get_catalog", { p_code: code }),
+      rpc("get_my_state", { p_code: code })
+    ]);
+    S.code = code;
+    S.catalog = catalog || [];
+    S.shown = new Set((my.states || []).filter(x => x.answer_shown).map(x => x.question_code));
+    storeSet(code);
+    enterApp(my.filters || {});
+  } catch (e) {
+    $("login-error").textContent = "접속에 실패했습니다. 잠시 후 다시 시도해 주세요. (" + e.message + ")";
+  } finally {
+    $("login-btn").disabled = false;
+  }
+}
+
+function logout() {
+  flush({ keepalive: false });
+  storeDel();
+  S.code = null; S.questions = []; S.shown = new Set(); S.rendered = 0;
+  $("question-container").innerHTML = "";
+  $("app-view").hidden = true;
+  $("login-view").hidden = false;
+  $("code-input").value = "";
+  $("login-error").textContent = "";
+  $("code-input").focus();
+}
+
+// =====================================================================
+// 필터 UI
+// =====================================================================
+function enterApp(savedFilters) {
+  $("login-view").hidden = true;
+  $("app-view").hidden = false;
+  $("user-code").textContent = S.code;
+
+  const allSets = [...new Set(S.catalog.map(r => r.exam_set))];
+  const saved = Array.isArray(savedFilters.exam_sets) ? savedFilters.exam_sets.filter(s => allSets.includes(s)) : [];
+  S.selSets = new Set(saved.length ? saved : allSets);
+  S.subject = savedFilters.subject || "";
+  S.field = savedFilters.field || "";
+  S.area = savedFilters.area || "";
+
+  buildSetChecks(allSets);
+  refreshSelects();
+
+  const hasSaved = Object.keys(savedFilters).length > 0;
+  if (hasSaved) {
+    loadQuestions();
+  } else {
+    $("question-container").innerHTML = `<div class="empty">조건을 선택하고 [문제 보기]를 누르세요.</div>`;
+    updateToolbar();
+  }
+}
+
+function buildSetChecks(allSets) {
+  const box = $("set-list");
+  box.innerHTML = "";
+  allSets.forEach(s => {
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.value = s; cb.checked = S.selSets.has(s);
+    cb.addEventListener("change", () => {
+      if (cb.checked) S.selSets.add(s); else S.selSets.delete(s);
+      refreshSelects();
+    });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(s));
+    box.appendChild(label);
+  });
+}
+
+function setAllChecks(on) {
+  const allSets = [...new Set(S.catalog.map(r => r.exam_set))];
+  S.selSets = new Set(on ? allSets : []);
+  document.querySelectorAll("#set-list input[type=checkbox]").forEach(cb => { cb.checked = on; });
+  refreshSelects();
+}
+
+function fillSelect(sel, entries, current) {
+  sel.innerHTML = "";
+  const total = entries.reduce((a, e) => a + e[1], 0);
+  const opt0 = document.createElement("option");
+  opt0.value = ""; opt0.textContent = `전체 (${total})`;
+  sel.appendChild(opt0);
+  entries.forEach(([v, n]) => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = `${v} (${n})`;
+    sel.appendChild(o);
+  });
+  sel.value = entries.some(e => e[0] === current) ? current : "";
+  return sel.value;
+}
+
+// 회차 → 시험과목 → 분야 → 영역 순으로 목록을 좁힘
+function refreshSelects() {
+  let rows = S.catalog.filter(r => S.selSets.has(r.exam_set));
+  S.subject = fillSelect($("sel-subject"), countBy(rows, "subject"), S.subject);
+  if (S.subject) rows = rows.filter(r => r.subject === S.subject);
+  S.field = fillSelect($("sel-field"), countBy(rows, "field"), S.field);
+  if (S.field) rows = rows.filter(r => r.field === S.field);
+  S.area = fillSelect($("sel-area"), countBy(rows, "area"), S.area);
+  if (S.area) rows = rows.filter(r => r.area === S.area);
+
+  const n = rows.reduce((a, r) => a + r.n, 0);
+  $("match-count").textContent = S.selSets.size ? `선택한 조건: 총 ${n}문항` : "회차를 하나 이상 선택하세요.";
+  $("load-btn").disabled = !S.selSets.size || n === 0;
+}
+
+// =====================================================================
+// 문항 불러오기 / 렌더링
+// =====================================================================
+async function loadQuestions() {
+  if (!S.selSets.size) return;
+  const myReq = ++S.reqId;
+  const box = $("question-container");
+  box.innerHTML = `<div class="empty">불러오는 중...</div>`;
+  $("more-btn").hidden = true;
+  $("load-btn").disabled = true;
+
+  const filters = {
+    exam_sets: [...S.selSets],
+    subject: S.subject || null,
+    field: S.field || null,
+    area: S.area || null
+  };
+
+  try {
+    const data = await rpc("get_questions", {
+      p_code: S.code,
+      p_exam_sets: filters.exam_sets,
+      p_subject: filters.subject,
+      p_field: filters.field,
+      p_area: filters.area
+    });
+    if (myReq !== S.reqId) return;
+    S.questions = data || [];
+    S.rendered = 0;
+    box.innerHTML = "";
+    renderMore();
+    // 마지막 선택 조건 저장 (실패해도 화면 사용에는 영향 없음)
+    rpc("save_filters", { p_code: S.code, p_filters: filters }).catch(() => {});
+  } catch (e) {
+    if (myReq !== S.reqId) return;
+    if (/invalid code/i.test(e.message)) { logout(); return; }
+    box.innerHTML = `<div class="empty">불러오지 못했습니다. (${escapeHtml(e.message)})</div>`;
+  } finally {
+    if (myReq === S.reqId) refreshSelects();
+    updateToolbar();
+  }
+}
+
+function renderMore() {
+  const box = $("question-container");
+  if (!S.questions.length) {
+    box.innerHTML = `<div class="empty">조건에 맞는 문항이 없습니다.</div>`;
+    $("more-btn").hidden = true;
+    updateToolbar();
+    return;
+  }
+  const end = Math.min(S.rendered + PAGE_SIZE, S.questions.length);
+  const frag = document.createDocumentFragment();
+  for (let i = S.rendered; i < end; i++) frag.appendChild(buildCard(S.questions[i]));
+  box.appendChild(frag);
+  S.rendered = end;
+
+  const remain = S.questions.length - S.rendered;
+  const more = $("more-btn");
+  more.hidden = remain <= 0;
+  if (remain > 0) more.textContent = `더 보기 (${remain}문항 남음)`;
+  updateToolbar();
+}
+
+function buildCard(q) {
+  const items = q.highlights || [];
+  const color = q.bg_color || "#FFFF00";
+
+  const card = document.createElement("article");
+  card.className = "question-card" + (S.shown.has(q.question_code) ? " show-highlight" : "");
+  card.dataset.code = q.question_code;
+
+  const meta = [q.exam_set, q.session ? q.session + "교시" : "", q.subject, q.field, q.area]
+    .filter(Boolean).join(" · ");
+  const metaEl = document.createElement("div");
+  metaEl.className = "q-meta";
+  metaEl.textContent = meta;
+  card.appendChild(metaEl);
+
+  const header = document.createElement("div");
+  header.className = "question-header";
+  header.innerHTML = `<span class="question-num">${escapeHtml(q.q_no)}.</span> ` +
+    highlightHtml(q.main_text, "본문지문", items, color);
+  card.appendChild(header);
+
+  if (q.sub_text && q.sub_text.trim() !== "") {
+    const sub = document.createElement("div");
+    sub.className = "sub-passage";
+    sub.innerHTML = highlightHtml(q.sub_text, "보조지문", items, color);
+    card.appendChild(sub);
+  }
+
+  const list = document.createElement("div");
+  list.className = "choices-list";
+  for (let i = 1; i <= 5; i++) {
+    const text = q["choice_" + i];
+    if (text === null || text === undefined || text === "") continue;
+    const row = document.createElement("div");
+    row.className = "choice-item";
+    const num = document.createElement("span");
+    num.className = "choice-num";
+    num.textContent = CIRCLED[i - 1];
+    const txt = document.createElement("span");
+    txt.className = "choice-text";
+    txt.innerHTML = highlightHtml(text, "보기_" + i, items, color);
+    row.appendChild(num);
+    row.appendChild(txt);
+    list.appendChild(row);
+  }
+  card.appendChild(list);
+
+  const actions = document.createElement("div");
+  actions.className = "answer-actions";
+  const btn = document.createElement("button");
+  btn.className = "btn-answer";
+  btn.type = "button";
+  btn.textContent = "정답";
+  btn.addEventListener("click", () => {
+    const on = card.classList.toggle("show-highlight");
+    setShown(q.question_code, on);
+    queueSave(q.question_code, on);
+    updateToolbar();
+  });
+  actions.appendChild(btn);
+  card.appendChild(actions);
+
+  if (q.explanation && q.explanation.trim() !== "") {
+    const ex = document.createElement("div");
+    ex.className = "explain";
+    ex.textContent = q.explanation;
+    card.appendChild(ex);
+  }
+  return card;
+}
+
+function setShown(code, on) {
+  if (on) S.shown.add(code); else S.shown.delete(code);
+}
+
+function updateToolbar() {
+  const total = S.questions.length;
+  const seen = S.questions.reduce((a, q) => a + (S.shown.has(q.question_code) ? 1 : 0), 0);
+  $("progress").textContent = total ? `불러온 문항 ${total}개 · 정답 확인 ${seen}개` : "";
+  $("toggle-all").hidden = !total;
+}
+
+function toggleAll() {
+  if (!S.questions.length) return;
+  const allOn = S.questions.every(q => S.shown.has(q.question_code));
+  const target = !allOn;
+  S.questions.forEach(q => { setShown(q.question_code, target); queueSave(q.question_code, target); });
+  document.querySelectorAll(".question-card").forEach(c => c.classList.toggle("show-highlight", target));
+  updateToolbar();
+}
+
+// =====================================================================
+// 사용자별 상태 저장 (묶어서 저장, 실패 시 재시도 가능)
+// =====================================================================
+let pending = new Map();
+let saveTimer = null;
+let saving = false;
+
+function setSaveStatus(kind) {
+  const el = $("save-status");
+  el.hidden = false;
+  el.className = kind;
+  el.textContent = kind === "saving" ? "저장 중..." : kind === "saved" ? "저장됨" : "저장 실패 · 눌러서 다시 시도";
+}
+
+function queueSave(code, on) {
+  pending.set(code, on);
+  setSaveStatus("saving");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => flush(), 500);
+}
+
+async function flush(opts) {
+  clearTimeout(saveTimer);
+  if (!pending.size || !S.code) return;
+  if (saving) { saveTimer = setTimeout(() => flush(opts), 300); return; }
+  const code = S.code;
+  const batch = [...pending.entries()];
+  pending = new Map();
+  saving = true;
+  try {
+    await rpc("save_states", {
+      p_code: code,
+      p_items: batch.map(([question_code, answer_shown]) => ({ question_code, answer_shown }))
+    }, opts);
+    setSaveStatus(pending.size ? "saving" : "saved");
+  } catch (e) {
+    batch.forEach(([k, v]) => { if (!pending.has(k)) pending.set(k, v); });
+    setSaveStatus("error");
+  } finally {
+    saving = false;
+    if (pending.size && $("save-status").className !== "error") {
+      saveTimer = setTimeout(() => flush(), 300);
+    }
+  }
+}
+
+// =====================================================================
+// 이벤트 연결
+// =====================================================================
+$("login-btn").addEventListener("click", () => login($("code-input").value, false));
+$("code-input").addEventListener("keydown", e => { if (e.key === "Enter") login($("code-input").value, false); });
+$("logout-btn").addEventListener("click", logout);
+
+$("sets-all").addEventListener("click", () => setAllChecks(true));
+$("sets-none").addEventListener("click", () => setAllChecks(false));
+
+$("sel-subject").addEventListener("change", e => { S.subject = e.target.value; S.field = ""; S.area = ""; refreshSelects(); });
+$("sel-field").addEventListener("change", e => { S.field = e.target.value; S.area = ""; refreshSelects(); });
+$("sel-area").addEventListener("change", e => { S.area = e.target.value; refreshSelects(); });
+
+$("load-btn").addEventListener("click", loadQuestions);
+$("more-btn").addEventListener("click", renderMore);
+$("toggle-all").addEventListener("click", toggleAll);
+$("save-status").addEventListener("click", () => { if ($("save-status").className === "error") flush(); });
+
+window.addEventListener("pagehide", () => flush({ keepalive: true }));
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush({ keepalive: true }); });
+
+// 이전에 입장한 코드가 있으면 자동 입장
+(function init() {
+  const saved = storeGet();
+  if (saved) { $("code-input").value = saved; login(saved, true); }
+})();
+</script>
+</body>
+</html>
