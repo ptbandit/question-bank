@@ -93,6 +93,11 @@
     .empty { text-align: center; color: var(--muted); padding: 34px 0; }
     .more-wrap { text-align: center; }
     @media (prefers-reduced-motion: reduce) { .hl-keyword { transition: none; } }
+    /* 맨 위로 버튼 */
+    #to-top { position: fixed; right: 16px; bottom: 16px; z-index: 20; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-fg); font-size: 28px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .2s, transform .2s, visibility .2s; }
+    #to-top.show { opacity: 1; visibility: visible; transform: none; }
+    #to-top:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { #to-top { transition: none; } }
   </style>
 </head>
 <body>
@@ -151,6 +156,7 @@
     <div class="more-wrap"><button id="more-btn" class="btn ghost" type="button" hidden></button></div>
   </div>
 
+<button id="to-top" type="button" aria-label="맨 위로" title="맨 위로"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></button>
 <script>
 // =====================================================================
 // 설정
@@ -483,6 +489,16 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 (function init() {
   const saved = storeGet();
   if (saved) { $("code-input").value = saved; login(saved, true); }
+})();
+
+// 맨 위로 버튼: 화면을 조금 내려가면 나타나고, 누르면 맨 위로 이동
+(() => {
+  const b = document.getElementById("to-top");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sync = () => b.classList.toggle("show", window.scrollY > 400);
+  window.addEventListener("scroll", sync, { passive: true });
+  b.addEventListener("click", () => window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }));
+  sync();
 })();
 </script>
 </body>
