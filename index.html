@@ -39,7 +39,6 @@
     .app-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 2px solid var(--fg); padding-bottom: 10px; }
     .app-header h1 { font-size: 19px; margin: 0; }
     .user-box { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
-    .user-code { background: var(--accent-soft); padding: 2px 9px; border-radius: 999px; }
 
     .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
     .panel-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -117,7 +116,6 @@
     <header class="app-header">
       <h1>문제은행</h1>
       <div class="user-box">
-        <span class="user-code" id="user-code"></span>
         <button id="logout-btn" class="btn ghost sm" type="button">나가기</button>
       </div>
     </header>
@@ -293,7 +291,6 @@ function logout() {
 // =====================================================================
 function enterApp(saved) {
   $("login-view").hidden = true; $("app-view").hidden = false;
-  $("user-code").textContent = S.code;
   S.allSets = [...new Set(S.catalog.map(r => r.exam_set))].sort(setOrder);
   const keep = Array.isArray(saved.exam_sets) ? saved.exam_sets.filter(s => S.allSets.includes(s)) : [];
   S.selSets = new Set(keep.length ? keep : S.allSets);   // 저장된 선택이 없으면 전체 회차
